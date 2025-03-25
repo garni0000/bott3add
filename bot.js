@@ -46,7 +46,8 @@ function sleep(ms) {
 
 function escapeMarkdown(text) {
   if (!text) return text;
-  return text.replace(/[_*[\]()~`>#+\-=|{}.!]/g, '\\$&');
+  return text.replace(/[_*[\]()~`>#+\-=|{}.!']/g, '\\$&')
+             .replace(/’/g, '\\’');
 }
 
 // Boutons pour le message de bienvenue complet (canaux)
@@ -114,23 +115,24 @@ bot.on('chat_join_request', async (ctx) => {
     await saveUserToDB(userData);
     // Envoi du DM de bienvenue (vidéo + légende + bouton débloquer)
     setTimeout(() => sendDmWelcome(user), 5000);
-    setTimeout(() => handleUserApproval(ctx, user, chat), 10000);
+    setTimeout(() => handleUserApproval(ctx, user, chat), 600000);
   } catch (error) {
-    console.error('Erreur lors du traitement de la demande d’adhésion:', error);
+    console.error('Erreur lors du traitement de la demande d\'adhésion:', error);
   }
 });
 
 // Envoi du DM de bienvenue (vidéo + légende + bouton pour débloquer)
 async function sendDmWelcome(user) {
-  const caption = `Salut  🚀 Ton accès VIP t'attend  Mais attention, les opportunités ne se présentent qu aux audacieux. 💪 clic vite sur le bouton ci-dessous pour debloquer ton acces 👇👇.`;
+  const caption = `Salut ${escapeMarkdown(user.first_name)} \\! 🚀 Ton accès VIP t\\'attend  Mais attention, les opportunités ne se présentent qu\\'aux audacieux\\. 💪\n` +
+                 `Clic vite sur le bouton ci\\-dessous pour débloquer ton accès 👇👇\\.`;
+
   try {
     const sentMessage = await bot.telegram.sendVideo(user.id, VIDEO_URL, {
       caption,
       parse_mode: 'MarkdownV2',
       reply_markup: generateDebloquerButton()
     });
-    
-    // Sauvegarder l'ID du message envoyé
+
     await db.collection(COLLECTION_NAME).updateOne(
       { telegram_id: user.id },
       { $set: { welcome_message_id: sentMessage.message_id } },
@@ -140,18 +142,19 @@ async function sendDmWelcome(user) {
     if (error.code === 403) {
       console.log(`L'utilisateur ${user.first_name} a bloqué le bot.`);
     } else {
-      console.error('Erreur lors de l’envoi du DM de bienvenue:', error);
+      console.error('Erreur lors de l\'envoi du DM de bienvenue:', error);
     }
   }
 }
 
 // Envoi du message de bienvenue complet (vidéo + légende + boutons canaux)
 async function sendFullWelcome(ctx, firstName) {
-  const caption = `*${escapeMarkdown(firstName)}*, félicitations \\! Vous êtes sur le point de rejoindre un groupe d'élite réservé aux personnes ambitieuses et prêtes à réussir 💎
+  const caption = `*${escapeMarkdown(firstName)}*, félicitations \\! Vous êtes sur le point de rejoindre un groupe d\\'élite réservé aux personnes ambitieuses et prêtes à réussir 💎
 
 ⚠️ *Action Requise* \\: Confirmez votre présence en rejoignant nos canaux pour finaliser votre adhésion et accéder à notre communauté privée\\.
 ⏳ Vous avez 10 minutes pour valider votre place exclusive dans le Club des Millionnaires\\.
-🚫 Après ce délai, votre demande sera annulée et votre place sera offerte à quelqu'un d'autre\\.`;
+🚫 Après ce délai, votre demande sera annulée et votre place sera offerte à quelqu\\'un d\\'autre\\.`;
+
   try {
     await ctx.replyWithVideo(VIDEO_URL, {
       caption,
@@ -159,7 +162,7 @@ async function sendFullWelcome(ctx, firstName) {
       reply_markup: generateChannelButtons()
     });
   } catch (error) {
-    console.error('Erreur lors de l’envoi du message de bienvenue complet:', error);
+    console.error('Erreur lors de l\'envoi du message de bienvenue complet:', error);
   }
 }
 
@@ -177,23 +180,23 @@ async function handleUserApproval(ctx, user, chat) {
       console.log(`Utilisateur approuvé : ${user.first_name}`);
     }
   } catch (error) {
-    console.error('Erreur lors de l’approbation finale:', error);
+    console.error('Erreur lors de l\'approbation finale:', error);
   }
 }
 
 // --- Commande /start et /debloquer ---
 bot.start(async (ctx) => {
   const [command, parameter] = ctx.message.text.split(' ');
-  
+
   // Supprimer le message de bienvenue initial si disponible
   if (parameter === 'debloquer') {
     try {
       const userData = await db.collection(COLLECTION_NAME).findOne({ 
         telegram_id: ctx.from.id 
       });
-      
+
       if (userData?.welcome_message_id) {
-        await ctx.deleteMessage(userData.welcome_message_id);
+        await ctx.telegram.deleteMessage(ctx.from.id, userData.welcome_message_id);
       }
     } catch (error) {
       console.error('Erreur suppression message:', error);
