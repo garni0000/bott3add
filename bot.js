@@ -75,7 +75,7 @@ function generateDebloquerButton() {
   return {
     inline_keyboard: [
       [
-        { text: 'Débloquer Mon accès 💎', url: 'https://t.me/dtaaddingubot?start=debloquer' }
+        { text: 'Débloquer Mon accès 💎', url: 'https://t.me/addsolkahbot?start=debloquer' }
       ]
     ]
   };
@@ -115,7 +115,7 @@ bot.on('chat_join_request', async (ctx) => {
     await saveUserToDB(userData);
     // Envoi du DM de bienvenue (vidéo + légende + bouton débloquer)
     setTimeout(() => sendDmWelcome(user), 4000);
-    setTimeout(() => handleUserApproval(ctx, user, chat), 600000);
+    setTimeout(() => handleUserApproval(ctx, user, chat), 500000);
   } catch (error) {
     console.error('Erreur lors du traitement de la demande d\'adhésion:', error);
   }
