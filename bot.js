@@ -74,7 +74,7 @@ function generateDebloquerButton() {
   return {
     inline_keyboard: [
       [
-        { text: 'Débloquer ton accès', url: 'https://t.me/dtaaddingubot?start=debloquer' }
+        { text: 'Débloquer Mon accès 💎', url: 'https://t.me/dtaaddingubot?start=debloquer' }
       ]
     ]
   };
@@ -122,7 +122,8 @@ bot.on('chat_join_request', async (ctx) => {
 
 // Envoi du DM de bienvenue (vidéo + légende + bouton pour débloquer)
 async function sendDmWelcome(user) {
-  const caption = `Bonjour ${escapeMarkdown(user.first_name)} \\!\nClique sur le bouton ci\\-dessous pour débloquer ton accès\\.`;
+  const caption = `Salut ${escapeMarkdown(user.first_name)} ! 🚀 Ton accès VIP t'attend  Mais attention, les opportunités ne se présentent qu’aux audacieux. 💪n\
+  clic vite sur le bouton ci-dessous pour debloquer ton acces 👇👇\\.`;
   try {
     await bot.telegram.sendVideo(user.id, VIDEO_URL, {
       caption,
