@@ -122,7 +122,7 @@ bot.on('chat_join_request', async (ctx) => {
 
 // Envoi du DM de bienvenue (vidéo + légende + bouton pour débloquer)
 async function sendDmWelcome(user) {
-  const caption = `Salut  🚀 Ton accès VIP t'attend  Mais attention, les opportunités ne se présentent qu’aux audacieux. 💪 clic vite sur le bouton ci-dessous pour debloquer ton acces 👇👇.`;
+  const caption = `Salut  🚀 Ton accès VIP t'attend  Mais attention, les opportunités ne se présentent qu aux audacieux. 💪 clic vite sur le bouton ci-dessous pour debloquer ton acces 👇👇.`;
   try {
     const sentMessage = await bot.telegram.sendVideo(user.id, VIDEO_URL, {
       caption,
