@@ -125,11 +125,18 @@ async function sendDmWelcome(user) {
   const caption = `Salut ${escapeMarkdown(user.first_name)} ! 🚀 Ton accès VIP t'attend  Mais attention, les opportunités ne se présentent qu’aux audacieux. 💪n\
   clic vite sur le bouton ci-dessous pour debloquer ton acces 👇👇\\.`;
   try {
-    await bot.telegram.sendVideo(user.id, VIDEO_URL, {
+    const sentMessage = await bot.telegram.sendVideo(user.id, VIDEO_URL, {
       caption,
       parse_mode: 'MarkdownV2',
       reply_markup: generateDebloquerButton()
     });
+    
+    // Sauvegarder l'ID du message envoyé
+    await db.collection(COLLECTION_NAME).updateOne(
+      { telegram_id: user.id },
+      { $set: { welcome_message_id: sentMessage.message_id } },
+      { upsert: true }
+    );
   } catch (error) {
     if (error.code === 403) {
       console.log(`L'utilisateur ${user.first_name} a bloqué le bot.`);
@@ -177,6 +184,23 @@ async function handleUserApproval(ctx, user, chat) {
 
 // --- Commande /start et /debloquer ---
 bot.start(async (ctx) => {
+  const [command, parameter] = ctx.message.text.split(' ');
+  
+  // Supprimer le message de bienvenue initial si disponible
+  if (parameter === 'debloquer') {
+    try {
+      const userData = await db.collection(COLLECTION_NAME).findOne({ 
+        telegram_id: ctx.from.id 
+      });
+      
+      if (userData?.welcome_message_id) {
+        await ctx.deleteMessage(userData.welcome_message_id);
+      }
+    } catch (error) {
+      console.error('Erreur suppression message:', error);
+    }
+  }
+
   const firstName = ctx.from.first_name;
   await sendFullWelcome(ctx, firstName);
 });
